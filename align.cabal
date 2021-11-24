@@ -1,21 +1,20 @@
-name:                align
-version:             0.1.1.2
-synopsis:            Sequence alignment algorithms.
-description:         Global or local sequence alignment, not exclusively for text.
+name:                align-affine
+version:             0.1.0.0
+synopsis:            Sequence alignment with affine gap penalty.
+description:         Global alignment using the Center Star algorithm, with affine gap penalty.
 license:             BSD3
 license-file:        LICENSE
-author:              Robin Palotai
-maintainer:          palotai.robin@gmail.com
+author:              Charles Li
+maintainer:          charles.li@ehess.fr
 category:            Data
 build-type:          Simple
 cabal-version:       >=1.10
 source-repository head
   type: git
-  location: https://github.com/robinp/align.git
+  location: https://github.com/chchch/align-affine.git
 
 library
-  exposed-modules:     Data.Align,
-                       Data.Align.Demo
+  exposed-modules:     Data.Align.Affine
   build-depends:       base >=4.6 && <5,
                        containers,
                        transformers,

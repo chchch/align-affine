@@ -1,6 +1,4 @@
-Copyright (c) 2014, Robin Palotai, Google Inc
-
-All rights reserved.
+Copyright 2021, Charles Li. Forked from copyright 2014, Robin Palotai, Google Inc.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
