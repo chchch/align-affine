@@ -22,9 +22,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import Data.Ord (comparing)
---import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
---import Control.Parallel.Strategies
 
 -- | Either an unmatched item or a match.
 type Step a = Either (Either a a) (a, a)
@@ -72,7 +70,7 @@ alignConfig = AlignConfig
 -- 
 -- Char-based alignment
 -- >>> :{
--- let tr = align (alignConfig (\a b -> if a == b then 0 else (-1)) 
+-- let tr = align (alignConfig (\a b -> if a == b then 1 else (-1)) 
 --                             (-1) (-0.25)) 
 --                (Data.Vector.fromList "circumambulate") 
 --                (Data.Vector.fromList "perambulatory")
@@ -81,13 +79,13 @@ alignConfig = AlignConfig
 --    putStrLn . debugAlign . trace $ tr
 -- :}
 --
--- 8.5
+-- -0.5
 -- circumambulate--
 -- per---ambulatory
 --
 -- String-based alignment
 -- >>> :{
--- let tr = align (alignConfig (\a b -> if a == b then 0 else (-1)) 
+-- let tr = align (alignConfig (\a b -> if a == b then 1 else (-1)) 
 --                             (-1) (-0.25)) 
 --                (Data.Vector.fromList ["kra","ya","ṇā","ddha","ra","ṇā","tyā","cñā","yāḥ"]) 
 --                (Data.Vector.fromList ["bha","ra","ṇā","da","pa","ha","ra","ṇā","tyā","cña","yā"])
@@ -96,7 +94,7 @@ alignConfig = AlignConfig
 --    putStrLn . debugStrAlign . trace $ tr
 -- :}
 --
--- -7.25
+-- -3.25
 -- |kra|ya|ṇā|ddha|--|--|ra|ṇā|tyā|cñā|yāḥ|
 -- |bha|ra|ṇā|da  |pa|ha|ra|ṇā|tyā|cñā|yā |
 align :: (G.Vector v a, Num s, Ord s)
@@ -104,7 +102,6 @@ align :: (G.Vector v a, Num s, Ord s)
   -> v a  -- ^ Left sequence.
   -> v a  -- ^ Right sequence.
   -> Trace a s
-
 align AlignConfig{..} as bs =
   let p = (lastIndex as, lastIndex bs)
   in revTrace . at_max $ evalState (go p) M.empty
@@ -171,11 +168,12 @@ debugStrAlign = go id id
                               (bs . ("|"++) . (take (length c) (repeat '-') ++)) ts
         Left (Right c)  -> go (as . ("|"++) . (take (length c) (repeat '-') ++)) 
                               (bs . ("|"++) . (c ++)) ts
-        Right (c,d)     -> go (as . ("|"++) . (c ++) . (fill1 ++)) 
-                              (bs . ("|"++) . (d ++) . (fill2 ++)) ts
+        Right (c,d)     -> go (as . ("|"++) . (c ++) . (filldc ++)) 
+                              (bs . ("|"++) . (d ++) . (fillcd ++)) ts
             where
-            fill1 = take (length d - length c) (repeat ' ')
-            fill2 = take (length c - length d) (repeat ' ')
+            fill n = take n $ repeat ' '
+            filldc = fill (length d - length c)
+            fillcd = fill (length c - length d)
 
 -- | A step in a multi-sequence alignment.
 data MultiStep a = MultiStep
@@ -258,7 +256,6 @@ centerStar conf vs =
     . L.sortBy (comparing fst)
     $ pairAligns
     where
-
     pairAligns = do
       ((i,v):rest) <- L.tails vs
       (j,w) <- rest
@@ -270,46 +267,6 @@ centerStar conf vs =
             go (Left (Left a)) = Left (Right a)
             go (Left (Right a)) = Left (Left a)
             go (Right (c,d)) = Right (d,c)    
-{-
-    pairAligns:: (G.Vector v a, Num s, Ord s, Ord i)
-                => AlignConfig a s
-                -> [(i, v a)]
-                -> [((i,i),Trace a s)]
-    pairAligns conf vs = concat (map gotr xys `using` parListChunk il rseq)
-        where
-        is = V.fromList vs
-        il = (length is) - 1
-        xys = [(x,y) | x <- [0..il], y <- [x..il]]
-        gotr (x,y) = [((jj,kk), tr),((kk,jj), flipLR tr)]
-            where 
-            j = is V.! x
-            k = is V.! y
-            jj = fst j
-            kk = fst k
-            tr = align conf (snd j) (snd k)
-            flipLR tr = tr { trace = map go . trace $ tr }
-                where
-                go (Left (Left a)) = Left (Right a)
-                go (Left (Right a)) = Left (Left a)
-                go (Right (c,d)) = Right (d,c)
--}
-{-
-    pairAligns conf vs = concat $ map concat (parMap rseq go ts)
-        where
-        ts = L.tails vs
-        go [] = []
-        go [x] = []
-        go (i:js) = map go2 js
-            where
-            go2 j = [((fst i,fst j),tr),((fst j, fst i), flipLR tr)]
-                where
-                tr = align conf (snd i) (snd j)
-                flipLR tr = tr { trace = map go3 . trace $ tr }
-                    where
-                    go3 (Left (Left a)) = Left (Right a)
-                    go3 (Left (Right a)) = Left (Left a)
-                    go3 (Right (c,d)) = Right (d,c)
--}  
     --
     starSum = sum . map (traceScore . snd)
 
