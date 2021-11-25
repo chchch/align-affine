@@ -56,13 +56,13 @@ data AffineTrace a s = AffineTrace {
 
 data AlignConfig a s = AlignConfig
   { acPairScore :: a -> a -> s
-  , ac_gap_penalty :: s
-  , ac_gap_opening_penalty :: s
+  , acGapOpen :: s
+  , acGapExtension :: s
   }
 
 alignConfig :: (a -> a -> s)   -- ^ Scoring function.
-            -> s               -- ^ Gap extension score.
             -> s               -- ^ Gap opening score.
+            -> s               -- ^ Gap extension score.
             -> AlignConfig a s
 alignConfig = AlignConfig
 
@@ -131,20 +131,20 @@ align AlignConfig{..} as bs =
       let diag_max = (at_max diag) `tappend` (acPairScore a b, stepBoth a b)
       
       a_gaps <- go (i-1,  j)
-      let a_gap1 = (at_max a_gaps) `tappend` (ac_gap_opening_penalty + ac_gap_penalty, stepLeft a)
-      let a_gap2 = (at_left_gap) a_gaps `tappend` (ac_gap_penalty, stepLeft a)
+      let a_gap1 = (at_max a_gaps) `tappend` (acGapOpen + acGapExtension, stepLeft a)
+      let a_gap2 = (at_left_gap) a_gaps `tappend` (acGapExtension, stepLeft a)
       let a_gap_max = L.maximumBy (comparing traceScore) [a_gap1, a_gap2]
       
       b_gaps <- go (  i,j-1)
-      let b_gap1 = (at_max b_gaps) `tappend` (ac_gap_opening_penalty + ac_gap_penalty, stepRight b)
-      let b_gap2 = (at_right_gap b_gaps) `tappend` (ac_gap_penalty, stepRight b)
+      let b_gap1 = (at_max b_gaps) `tappend` (acGapOpen + acGapExtension, stepRight b)
+      let b_gap2 = (at_right_gap b_gaps) `tappend` (acGapExtension, stepRight b)
       let b_gap_max = L.maximumBy (comparing traceScore) [b_gap1, b_gap2]
       
       let maxi = L.maximumBy (comparing traceScore) [diag_max, a_gap_max, b_gap_max]
       return $ AffineTrace maxi a_gap_max b_gap_max
   --
   skipInit idx stepFun xs =
-    let score = ac_gap_opening_penalty + ac_gap_penalty * fromIntegral (idx+1)
+    let score = acGapOpen + acGapExtension * fromIntegral (idx+1)
         tr = reverse [stepFun (xs G.! xi) | xi <- [0..idx]]
     in AffineTrace (Trace score tr) (Trace score tr) (Trace score tr)
 
