@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Pairwise alignment with affine gap penalties and multi-sequence alignment. Forked from Data.Align. This algorithm uses a gap opening penalty and a gap extension penalty to score alignments.
+-- | Pairwise & multi-sequence alignment with an affine gap penalty model. Forked from "Data.Align". This algorithm uses a gap opening penalty and a gap extension penalty to score alignments.
 module Data.Align.Affine
   (
-  -- * Global and local alignment
+  -- * Global alignment
   align
   , AlignConfig
   , alignConfig
@@ -60,43 +60,14 @@ data AlignConfig a s = AlignConfig
   , acGapExtension :: s
   }
 
+-- | This algorithm uses an affine gap penalty model. See section 12.6 "Convex gap weights" in Gusfield 1997: <https://doi.org/10.1017/CBO9780511574931>.
 alignConfig :: (a -> a -> s)   -- ^ Scoring function.
             -> s               -- ^ Gap opening score.
             -> s               -- ^ Gap extension score.
             -> AlignConfig a s
 alignConfig = AlignConfig
 
--- | Aligns two sequences.
--- 
--- Char-based alignment
--- >>> :{
--- let tr = align (alignConfig (\a b -> if a == b then 1 else (-1)) 
---                             (-1) (-0.25)) 
---                (Data.Vector.fromList "circumambulate") 
---                (Data.Vector.fromList "perambulatory")
--- in do
---    print $ traceScore tr
---    putStrLn . debugAlign . trace $ tr
--- :}
---
--- -0.5
--- circumambulate--
--- per---ambulatory
---
--- String-based alignment
--- >>> :{
--- let tr = align (alignConfig (\a b -> if a == b then 1 else (-1)) 
---                             (-1) (-0.25)) 
---                (Data.Vector.fromList ["kra","ya","ṇā","ddha","ra","ṇā","tyā","cñā","yāḥ"]) 
---                (Data.Vector.fromList ["bha","ra","ṇā","da","pa","ha","ra","ṇā","tyā","cña","yā"])
--- in do
---    print $ traceScore tr
---    putStrLn . debugStrAlign . trace $ tr
--- :}
---
--- -3.25
--- |kra|ya|ṇā|ddha|--|--|ra|ṇā|tyā|cñā|yāḥ|
--- |bha|ra|ṇā|da  |pa|ha|ra|ṇā|tyā|cñā|yā |
+-- | Aligns two sequences using the Needleman-Wunsch algorithm. See Needleman & Wunsch 1970: <https://doi.org/10.1016/0022-2836(70)90057-4>.
 align :: (G.Vector v a, Num s, Ord s)
   => AlignConfig a s
   -> v a  -- ^ Left sequence.
@@ -149,6 +120,24 @@ align AlignConfig{..} as bs =
     in AffineTrace (Trace score tr) (Trace score tr) (Trace score tr)
 
 -- | Utility for displaying a Char-based alignment.
+--
+-- == Example
+-- 
+-- > >>> :{
+-- > let tr = align (alignConfig (\a b -> if a == b then 0.5 else (-0.5)) 
+-- >                            (-3) (-0.25)) 
+-- >               (Data.Vector.fromList "circumambulate") 
+-- >               (Data.Vector.fromList "perambulatory")
+-- > in do
+-- >   print $ traceScore tr
+-- >   putStrLn . debugAlign . trace $ tr
+-- > :}
+-- 
+-- == Output
+--
+-- > -4.75
+-- > circumambulate--
+-- > per---ambulatory
 debugAlign :: [Step Char] -> String
 debugAlign = go [] []
   where
@@ -159,6 +148,24 @@ debugAlign = go [] []
     Right (c, d)   -> go (c:as) (d:bs) ts
 
 -- | Utility for displaying a String-based alignment.
+-- 
+-- == Example
+--
+-- >>> :{
+-- let tr = align (alignConfig (\a b -> if a == b then 0.5 else (-0.5)) 
+--                             (-3) (-0.25)) 
+--                (Data.Vector.fromList ["kra","ya","ṇā","ddha","ra","ṇā","tyā","cñā","yāḥ"]) 
+--                (Data.Vector.fromList ["bha","ra","ṇā","da","pa","ha","ra","ṇā","tyā","cña","yā"])
+-- in do
+--    print $ traceScore tr
+--    putStrLn . debugStrAlign . trace $ tr
+-- :}
+--
+-- == Output
+--
+-- > -4.0
+-- > |kra|ya|ṇā|ddha|--|--|ra|ṇā|tyā|cñā|yāḥ|
+-- > |bha|ra|ṇā|da  |pa|ha|ra|ṇā|tyā|cñā|yā |
 debugStrAlign :: [Step String] -> String
 debugStrAlign = go id id
     where
@@ -196,8 +203,10 @@ stepOfAll MultiStep{..} = center:others
 allIndices :: MultiTrace i a s -> [i]
 allIndices MultiTrace{..} = centerIndex:otherIndices
 
--- | Align multiple sequences using the Center Star method. See, for example, section 14.6.2, "A bounded-error approximation method for SP alignment" in Gusfield 1997: <https://doi.org/10.1017/CBO9780511574931>.
--- This algorithm uses an affine gap penalty model. See section 12.6 "Convex gap weights" in Gusfield 1997.
+-- | Align multiple sequences using the Center Star method. 
+--
+-- See, for example, section 14.6.2, "A bounded-error approximation method for SP alignment" in Gusfield 1997.
+-- 
 -- Assumes the list of sequences to have length > 1, and the indices to be unique.
 centerStar :: (G.Vector v a, Num s, Ord s, Ord i)
   => AlignConfig a s

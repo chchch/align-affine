@@ -1,12 +1,13 @@
 name:                align-affine
 version:             0.1.0.0
-synopsis:            Sequence alignment with affine gap penalty.
-description:         Global alignment using the Center Star algorithm, with affine gap penalty.
+synopsis:            Sequence alignment with an affine gap penalty model
+description:         Global & multi-sequence alignment using the Needleman-Wunsch & Center Star algorithms, with an affine gap penalty model.
 license:             BSD3
 license-file:        LICENSE.md
 author:              Charles Li
 maintainer:          charles.li@ehess.fr
 category:            Data
+extra-source-files:  CHANGELOG.md
 build-type:          Simple
 cabal-version:       >=1.10
 source-repository head
@@ -18,7 +19,7 @@ library
   build-depends:       base >=4.6 && <5,
                        containers >=0.6 && <0.7,
                        transformers >=0.5 && <0.7,
-                       vector >=0.1 && <0.13
+                       vector >=0.10 && <0.13
   hs-source-dirs:      src
   default-language:    Haskell98
   ghc-options:         -Wall
