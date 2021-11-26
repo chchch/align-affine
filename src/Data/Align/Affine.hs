@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Pairwise alignment with affine gap penalties and multi-sequence alignment. Forked from Data.Align.
+-- | Pairwise alignment with affine gap penalties and multi-sequence alignment. Forked from Data.Align. This algorithm uses a gap opening penalty and a gap extension penalty to score alignments.
 module Data.Align.Affine
   (
   -- * Global and local alignment

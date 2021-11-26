@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Sequence alignment with affine gap penalty.
 description:         Global alignment using the Center Star algorithm, with affine gap penalty.
 license:             BSD3
-license-file:        LICENSE
+license-file:        LICENSE.md
 author:              Charles Li
 maintainer:          charles.li@ehess.fr
 category:            Data
@@ -16,9 +16,9 @@ source-repository head
 library
   exposed-modules:     Data.Align.Affine
   build-depends:       base >=4.6 && <5,
-                       containers,
-                       transformers,
-                       vector >=0.10
+                       containers >=0.6 && <0.7,
+                       transformers >=0.5 && <0.7,
+                       vector >=0.1 && <0.13
   hs-source-dirs:      src
   default-language:    Haskell98
   ghc-options:         -Wall
