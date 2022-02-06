@@ -103,7 +103,7 @@ align AlignConfig{..} as bs =
       
       a_gaps <- go (i-1,  j)
       let a_gap1 = (at_max a_gaps) `tappend` (acGapOpen + acGapExtension, stepLeft a)
-      let a_gap2 = (at_left_gap) a_gaps `tappend` (acGapExtension, stepLeft a)
+      let a_gap2 = (at_left_gap a_gaps) `tappend` (acGapExtension, stepLeft a)
       let a_gap_max = L.maximumBy (comparing traceScore) [a_gap1, a_gap2]
       
       b_gaps <- go (  i,j-1)
